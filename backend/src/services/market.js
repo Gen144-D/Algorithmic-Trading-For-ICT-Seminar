@@ -61,7 +61,14 @@ async function fetchExternal(symbol, timeframe) {
   };
   try {
     const url = `${base}/time_series?symbol=${encodeURIComponent(symbol)}&interval=${intervalMap[timeframe]}&outputsize=300&apikey=${key}`;
-    const resp = await fetch(url);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    let resp;
+    try {
+      resp = await fetch(url, { signal: controller.signal });
+    } finally {
+      clearTimeout(timer);
+    }
     const json = await resp.json();
     if (!json.values) return null;
     return json.values.reverse().map((v) => ({

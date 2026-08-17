@@ -88,6 +88,16 @@ router.post('/:id/activate', async (req, res, next) => {
       return res.status(404).json({ error: 'Strategy not found' });
     }
     const active = req.body.active ? 1 : 0;
+    if (active) {
+      const rules = existing.rules || {};
+      const buy = Array.isArray(rules.buyConditions) ? rules.buyConditions : [];
+      const sell = Array.isArray(rules.sellConditions) ? rules.sellConditions : [];
+      if (!buy.length || !sell.length) {
+        return res.status(400).json({
+          error: 'Cannot activate: strategy needs at least one buy and one sell condition',
+        });
+      }
+    }
     const strategy = await store.updateStrategy(req.params.id, { active });
     await store.addLog(req.user.id, active ? 'STRATEGY_ACTIVATED' : 'STRATEGY_DEACTIVATED', {
       name: strategy.name,

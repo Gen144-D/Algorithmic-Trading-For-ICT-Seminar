@@ -20,12 +20,13 @@ async function runEngine(broadcast) {
       const { signal } = checkSignal(candles, strategy);
       const open = (await store.openTrades(strategy.user_id))
         .filter((t) => t.strategy_id === strategy.id);
+      const closed = new Set();
 
       if (signal !== 'WAIT') {
         console.log(`[engine] ${new Date().toISOString()} ${strategy.symbol} -> ${signal} (open: ${open.length})`);
       }
 
-      if (signal === 'BUY' && open.length < (risk.maxOpenTrades || 3)) {
+      if (signal === 'BUY' && open.filter((t) => !closed.has(t.id)).length < (risk.maxOpenTrades || 3)) {
         const user = await store.findUserById(strategy.user_id);
         const qty = (risk.positionSize || 1000) / latest.close;
         const cost = qty * latest.close;
@@ -41,19 +42,23 @@ async function runEngine(broadcast) {
           broadcast({ type: 'SIGNAL', signal: 'BUY', symbol: strategy.symbol, price: latest.close, strategy: strategy.name });
         }
       } else if (signal === 'SELL' && open.length) {
-        const pos = open[0];
-        const proceeds = pos.quantity * latest.close;
-        const pnl = proceeds - pos.quantity * pos.price;
-        await store.updateBalance(strategy.user_id, proceeds);
-        await store.closeTrade(pos.id, { price: latest.close, pnl });
-        await store.addLog(strategy.user_id, 'SIGNAL_SELL', {
-          symbol: strategy.symbol, price: latest.close, pnl, strategy: strategy.name,
-        });
-        broadcast({ type: 'SIGNAL', signal: 'SELL', symbol: strategy.symbol, price: latest.close, pnl, strategy: strategy.name });
+        const pos = open.find((t) => !closed.has(t.id));
+        if (pos) {
+          const proceeds = pos.quantity * latest.close;
+          const pnl = proceeds - pos.quantity * pos.price;
+          await store.updateBalance(strategy.user_id, proceeds);
+          await store.closeTrade(pos.id, { price: latest.close, pnl });
+          closed.add(pos.id);
+          await store.addLog(strategy.user_id, 'SIGNAL_SELL', {
+            symbol: strategy.symbol, price: latest.close, pnl, strategy: strategy.name,
+          });
+          broadcast({ type: 'SIGNAL', signal: 'SELL', symbol: strategy.symbol, price: latest.close, pnl, strategy: strategy.name });
+        }
       }
 
       // risk management: stop loss / take profit on open positions
       for (const pos of open) {
+        if (closed.has(pos.id)) continue;
         const slPrice = pos.price * (1 - (risk.stopLossPct || 0) / 100);
         const tpPrice = pos.price * (1 + (risk.takeProfitPct || 0) / 100);
         const exit = latest.low <= slPrice ? slPrice : latest.high >= tpPrice ? tpPrice : null;
@@ -61,6 +66,7 @@ async function runEngine(broadcast) {
           const pnl = (exit - pos.price) * pos.quantity;
           await store.updateBalance(strategy.user_id, pos.quantity * exit);
           await store.closeTrade(pos.id, { price: exit, pnl });
+          closed.add(pos.id);
           await store.addLog(strategy.user_id, exit <= slPrice ? 'STOP_LOSS' : 'TAKE_PROFIT', {
             symbol: strategy.symbol, price: exit, pnl, strategy: strategy.name,
           });

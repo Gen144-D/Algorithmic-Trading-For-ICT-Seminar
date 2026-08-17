@@ -5,13 +5,25 @@ const router = express.Router();
 router.use(authRequired);
 
 const AI_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+const AI_TIMEOUT_MS = 15000;
 
 async function proxy(path, body) {
-  const resp = await fetch(`${AI_URL}${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
+  let resp;
+  try {
+    resp = await fetch(`${AI_URL}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    clearTimeout(timer);
+    const status = err.name === 'AbortError' ? 504 : 502;
+    throw Object.assign(new Error('AI service unavailable'), { status });
+  }
+  clearTimeout(timer);
   const json = await resp.json().catch(() => ({}));
   if (!resp.ok) throw Object.assign(new Error(json.detail || 'AI service error'), { status: resp.status });
   return json;
