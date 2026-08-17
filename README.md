@@ -1,48 +1,501 @@
-# Algorithmic Trading System
+<div align="center">
 
-A full-stack algorithmic trading system that lets users define or select trading
-strategies, backtest them on historical market data, and run them against an
-automated trading engine with AI-assisted analysis.
+# ⚡ Algorithmic Trading System
 
-Core flow (matches the seminar concept):
-**market data → algorithm → decision → order/output → monitoring**
+### AI-Assisted Strategy Development • Backtesting • Real-Time Trading Simulation
 
-## Architecture
+<img
+src="https://capsule-render.vercel.app/api?type=waving&color=0:020617,35:0F172A,65:1D4ED8,100:06B6D4&height=220&section=header&text=ALGORITHMIC%20TRADING&fontSize=42&fontColor=FFFFFF&animation=fadeIn&fontAlignY=38"
+width="100%"
+/>
 
-| Component       | Technology                          |
-| --------------- | ----------------------------------- |
-| Frontend        | React (Vite) + Tailwind CSS         |
-| Backend         | Node.js / Express.js                |
-| API / AI        | FastAPI + Python                    |
-| Database        | MySQL (in-memory fallback for demo) |
-| AI              | Python heuristics + ML-ready hooks  |
-| Market Data     | External API hook + synthetic data  |
-| Authentication  | JWT                                 |
-| Real-Time Data  | WebSocket (market feed)             |
-| Trading Engine  | Python/Node rules engine            |
-| Deployment      | Docker / Cloud                      |
+<br/>
 
+<p>
+  <strong>
+    Market Data → Strategy → AI Analysis → Decision → Execution → Monitoring
+  </strong>
+</p>
+
+<p>
+  A full-stack algorithmic trading platform for developing strategies,
+  backtesting historical market data, and running automated paper-trading
+  simulations with AI-assisted analysis.
+</p>
+
+<br/>
+
+![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge\&logo=react\&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=for-the-badge\&logo=node.js\&logoColor=white)
+![Python](https://img.shields.io/badge/Python-FastAPI-3776AB?style=for-the-badge\&logo=python\&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-Database-4479A1?style=for-the-badge\&logo=mysql\&logoColor=white)
+
+<br/>
+
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat-square\&logo=docker\&logoColor=white)
+![WebSocket](https://img.shields.io/badge/Real--Time-WebSocket-010101?style=flat-square\&logo=socketdotio)
+![JWT](https://img.shields.io/badge/Auth-JWT-black?style=flat-square\&logo=jsonwebtokens)
+![Status](https://img.shields.io/badge/Status-Active%20Development-F59E0B?style=flat-square)
+
+</div>
+
+---
+
+## 🧠 The Idea
+
+This system brings the core algorithmic trading workflow into one platform:
+
+```text
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║     📊 MARKET DATA                                          ║
+║          │                                                   ║
+║          ▼                                                   ║
+║     🧠 ALGORITHM                                             ║
+║          │                                                   ║
+║          ▼                                                   ║
+║     🤖 AI ANALYSIS                                          ║
+║          │                                                   ║
+║          ▼                                                   ║
+║     ⚡ TRADING DECISION                                      ║
+║          │                                                   ║
+║          ▼                                                   ║
+║     💹 ORDER / OUTPUT                                        ║
+║          │                                                   ║
+║          ▼                                                   ║
+║     📈 MONITORING                                           ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
 ```
-Frontend (React) ──REST/WS──► Backend (Express)
-                                  ├──► FastAPI AI service (analysis / chat)
-                                  ├──► Trading Engine (rules → signal → order)
-                                  └──► DB (MySQL or in-memory)
-                                       └──► Market Data (external API or synthetic)
+
+The platform allows users to:
+
+* Create or select trading strategies
+* Configure trading rules
+* Backtest strategies using historical data
+* Analyze performance
+* Activate strategies
+* Generate automated trading signals
+* Simulate order execution
+* Monitor positions and trades
+* Use AI-assisted market analysis
+
+---
+
+# 🚀 Core Trading Loop
+
+<div align="center">
+
+### 📊 → 🧠 → 🤖 → ⚡ → 💹 → 📈
+
+**Market Data → Algorithm → AI Analysis → Decision → Order → Monitoring**
+
+</div>
+
+```text
+                    ┌──────────────────┐
+                    │   MARKET DATA    │
+                    │                  │
+                    │ Historical / Live│
+                    └────────┬─────────┘
+                             │
+                             ▼
+                    ┌──────────────────┐
+                    │ STRATEGY ENGINE  │
+                    │                  │
+                    │ Indicators       │
+                    │ Conditions       │
+                    │ Rules            │
+                    └────────┬─────────┘
+                             │
+                             ▼
+                    ┌──────────────────┐
+                    │   AI ANALYSIS    │
+                    │                  │
+                    │ Context          │
+                    │ Risk             │
+                    │ Explanation      │
+                    └────────┬─────────┘
+                             │
+                             ▼
+                    ┌──────────────────┐
+                    │ TRADING DECISION │
+                    │                  │
+                    │ BUY / SELL / HOLD│
+                    └────────┬─────────┘
+                             │
+                             ▼
+                    ┌──────────────────┐
+                    │ TRADING ENGINE   │
+                    │                  │
+                    │ Risk Validation  │
+                    │ Position Sizing  │
+                    └────────┬─────────┘
+                             │
+                             ▼
+                    ┌──────────────────┐
+                    │ PAPER EXECUTION  │
+                    │                  │
+                    │ Simulated Orders  │
+                    └────────┬─────────┘
+                             │
+                             ▼
+                    ┌──────────────────┐
+                    │   MONITORING     │
+                    │                  │
+                    │ P&L / Positions  │
+                    │ Trades / Logs    │
+                    └──────────────────┘
 ```
 
-## Repository layout
+---
 
+# ✨ What Makes It Different
+
+### 🔬 Strategy First
+
+Strategies can be created, configured, tested, and evaluated before activation.
+
+### 📊 Data Driven
+
+Historical and real-time market data feed the same trading workflow.
+
+### 🤖 AI Assisted
+
+AI analysis provides additional context around market conditions and strategy signals.
+
+### 🛡️ Risk Aware
+
+Risk controls are integrated into the trading engine instead of being treated as an afterthought.
+
+### ⚡ Real-Time
+
+WebSocket market feeds allow the dashboard to reflect trading activity as it happens.
+
+### 🧪 Paper Trading
+
+The system simulates execution so strategies can be tested without placing real financial orders.
+
+---
+
+# 🏗️ System Architecture
+
+```text
+                              ┌───────────────────────┐
+                              │       FRONTEND        │
+                              │                       │
+                              │ React + Vite          │
+                              │ Tailwind CSS          │
+                              │ Dashboard             │
+                              │ Strategy Builder      │
+                              │ Backtesting           │
+                              │ Analytics             │
+                              └───────────┬───────────┘
+                                          │
+                                   REST / WebSocket
+                                          │
+                                          ▼
+                              ┌───────────────────────┐
+                              │       BACKEND         │
+                              │                       │
+                              │ Node.js + Express     │
+                              │ JWT Authentication    │
+                              │ REST API              │
+                              │ WebSocket Server      │
+                              └───────────┬───────────┘
+                                          │
+                ┌─────────────────────────┼────────────────────────┐
+                │                         │                        │
+                ▼                         ▼                        ▼
+      ┌──────────────────┐      ┌──────────────────┐      ┌─────────────────┐
+      │   AI SERVICE     │      │ TRADING ENGINE   │      │    DATABASE     │
+      │                  │      │                  │      │                 │
+      │ FastAPI          │      │ Strategy Rules   │      │ MySQL           │
+      │ Python           │      │ Signals          │      │                 │
+      │ AI Analysis      │      │ Risk Controls    │      │ Users           │
+      │ ML Hooks         │      │ Orders           │      │ Strategies      │
+      └──────────────────┘      └──────────────────┘      │ Trades          │
+                                                          │ Positions       │
+                                                          └────────┬────────┘
+                                                                   │
+                                                                   ▼
+                                                        ┌──────────────────┐
+                                                        │   MARKET DATA    │
+                                                        │                  │
+                                                        │ External API     │
+                                                        │       or         │
+                                                        │ Synthetic Data   │
+                                                        └──────────────────┘
 ```
-database/       MySQL schema (schema.sql)
-backend/        Node.js/Express REST + WebSocket API
-ai-service/     FastAPI AI analysis service
-frontend/       React + Tailwind UI
-docker-compose.yml  Full deployment (requires Docker)
+
+---
+
+# 🧩 Architecture at a Glance
+
+| Component         | Technology               | Responsibility        |
+| ----------------- | ------------------------ | --------------------- |
+| 🖥️ Frontend      | React + Vite + Tailwind  | Trading interface     |
+| ⚙️ Backend        | Node.js + Express        | API & orchestration   |
+| 🤖 AI Service     | FastAPI + Python         | AI analysis           |
+| 🧠 Trading Engine | Python / Node            | Strategy execution    |
+| 🗄️ Database      | MySQL                    | Persistent data       |
+| 📡 Market Data    | External API / Synthetic | Price feeds           |
+| 🔐 Authentication | JWT                      | User authentication   |
+| ⚡ Real-Time       | WebSocket                | Live updates          |
+| 🐳 Deployment     | Docker                   | Service orchestration |
+
+---
+
+# 📈 Trading Engine
+
+The trading engine is responsible for converting strategy conditions into simulated trading actions.
+
+```text
+Market Tick
+     │
+     ▼
+┌──────────────┐
+│ Data Update  │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│ Indicators   │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│ Strategy     │
+│ Evaluation   │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│ Signal       │
+│ BUY/SELL/HOLD│
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│ Risk Check   │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│ Paper Order  │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│ Position     │
+│ Update       │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│ Portfolio    │
+│ Analytics    │
+└──────────────┘
 ```
 
-## Quick start
+---
 
-### 1. Backend (port 5000)
+# 🔬 Backtesting Workflow
+
+Before activating a strategy, it can be evaluated against historical market data.
+
+```text
+              HISTORICAL DATA
+                     │
+                     ▼
+              ┌──────────────┐
+              │ Select Asset │
+              │ & Timeframe  │
+              └──────┬───────┘
+                     │
+                     ▼
+              ┌──────────────┐
+              │ Configure    │
+              │ Strategy     │
+              └──────┬───────┘
+                     │
+                     ▼
+              ┌──────────────┐
+              │ Run          │
+              │ Backtest     │
+              └──────┬───────┘
+                     │
+                     ▼
+          ┌──────────────────────┐
+          │ Simulated Execution  │
+          └──────────┬───────────┘
+                     │
+                     ▼
+          ┌──────────────────────┐
+          │ Performance Analysis │
+          └──────────┬───────────┘
+                     │
+              ┌──────┴───────┐
+              ▼              ▼
+          ACCEPT          IMPROVE
+              │              │
+              └──────┬───────┘
+                     │
+                     ▼
+                NEXT TEST
+```
+
+---
+
+# 🤖 AI-Assisted Analysis
+
+The AI service provides additional context around market and strategy behavior.
+
+### Example
+
+```text
+USER
+"Why did my strategy generate a SELL signal?"
+
+                 │
+                 ▼
+
+        ┌──────────────────┐
+        │   AI SERVICE     │
+        ├──────────────────┤
+        │ Market Context   │
+        │ Indicators       │
+        │ Strategy Rules   │
+        │ Risk Conditions  │
+        └────────┬─────────┘
+                 │
+                 ▼
+
+        ┌──────────────────┐
+        │ AI Explanation   │
+        │                  │
+        │ Signal Context   │
+        │ Risk Factors     │
+        │ Market Conditions│
+        └──────────────────┘
+```
+
+AI is designed as **decision support and analysis**, rather than blindly controlling the trading engine.
+
+---
+
+# 🛡️ Risk Management
+
+The platform includes several risk-management concepts:
+
+* Stop-loss
+* Take-profit
+* Position sizing
+* Maximum open trades
+* Strategy validation
+* Trade history
+* Activity logs
+* Backtesting before activation
+* Graceful market-data failure handling
+
+```text
+                STRATEGY SIGNAL
+                       │
+                       ▼
+               ┌──────────────┐
+               │  RISK CHECK  │
+               └──────┬───────┘
+                      │
+             ┌────────┴────────┐
+             │                 │
+           PASS              FAIL
+             │                 │
+             ▼                 ▼
+        EXECUTE             REJECT
+          ORDER              SIGNAL
+```
+
+---
+
+# ⚡ Real-Time Data
+
+The platform uses WebSockets to deliver real-time updates between the trading engine and frontend.
+
+```text
+              MARKET DATA
+                   │
+                   ▼
+            ┌─────────────┐
+            │ Trading     │
+            │ Engine      │
+            └──────┬──────┘
+                   │
+              WebSocket
+                   │
+                   ▼
+            ┌─────────────┐
+            │   Backend   │
+            └──────┬──────┘
+                   │
+              WebSocket
+                   │
+                   ▼
+            ┌─────────────┐
+            │  Dashboard  │
+            └─────────────┘
+```
+
+This allows the UI to reflect:
+
+* Live prices
+* Strategy signals
+* Orders
+* Position changes
+* Portfolio values
+* Trading activity
+
+---
+
+# 📁 Repository Layout
+
+```text
+algorithmic-trading-system/
+│
+├── database/
+│   └── schema.sql
+│
+├── backend/
+│   ├── routes/
+│   ├── controllers/
+│   ├── services/
+│   ├── middleware/
+│   └── server.js
+│
+├── ai-service/
+│   ├── main.py
+│   ├── models/
+│   ├── services/
+│   └── requirements.txt
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── api/
+│   │   ├── context/
+│   │   └── hooks/
+│   └── package.json
+│
+├── docker-compose.yml
+├── .env.example
+└── README.md
+```
+
+---
+
+# 🚀 Quick Start
+
+## 1. Backend
 
 ```bash
 cd backend
@@ -50,21 +503,61 @@ npm install
 npm run dev
 ```
 
-Uses an in-memory database automatically when MySQL is unreachable.
-To use MySQL, set `DB_*` in `backend/.env` (see `.env.example`) and import
-`database/schema.sql`.
+**Port:** `5000`
 
-### 2. AI service (port 8000)
+The backend automatically uses an in-memory database when MySQL is unavailable.
+
+For MySQL, configure the `DB_*` variables in:
+
+```text
+backend/.env
+```
+
+Then import:
+
+```text
+database/schema.sql
+```
+
+---
+
+## 2. AI Service
 
 ```bash
 cd ai-service
+
 python -m venv .venv
-.venv\Scripts\activate        # Windows
+```
+
+### Windows
+
+```bash
+.venv\Scripts\activate
+```
+
+### macOS / Linux
+
+```bash
+source .venv/bin/activate
+```
+
+Install dependencies:
+
+```bash
 pip install -r requirements.txt
+```
+
+Start FastAPI:
+
+```bash
 uvicorn main:app --reload --port 8000
 ```
 
-### 3. Frontend (port 5173)
+**Port:** `8000`
+
+---
+
+## 3. Frontend
 
 ```bash
 cd frontend
@@ -72,23 +565,244 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173 — register a user, create a strategy, backtest it,
-activate it, then watch the trading engine generate signals on the dashboard.
+**Port:** `5173`
 
-## Environment variables
+Open:
 
-Copy the relevant `.env.example` to `.env` in each service and adjust.
+```text
+http://localhost:5173
+```
 
-## Default credentials / demo users
+---
 
-- Register your own account via the UI (signup is open).
-- Market data is synthetic by default; set `MARKET_DATA_API_KEY` +
-  `MARKET_DATA_API_BASE` to use a real provider (e.g. TwelveData) — the
-  adapter polls the provider and falls back to synthetic candles on failure.
+# 🐳 Docker
 
-## Risks addressed (from seminar)
+Run the complete system using Docker Compose:
 
-- Backtesting/validation before activation
-- Risk management: stop-loss, take-profit, position sizing, max open trades
-- Activity logs and trade history for monitoring
-- Graceful failure when external data sources are unavailable
+```bash
+docker compose up --build
+```
+
+Stop the services:
+
+```bash
+docker compose down
+```
+
+View running services:
+
+```bash
+docker compose ps
+```
+
+---
+
+# 🔐 Environment Configuration
+
+Each service provides an `.env.example`.
+
+Create the appropriate environment file:
+
+```bash
+cp .env.example .env
+```
+
+Typical configuration includes:
+
+```env
+DATABASE_URL=
+JWT_SECRET=
+
+MARKET_DATA_API_KEY=
+MARKET_DATA_API_BASE=
+
+AI_SERVICE_URL=
+```
+
+> Never commit production secrets or API keys to the repository.
+
+---
+
+# 📊 Market Data
+
+The system supports two data modes.
+
+### Synthetic Data
+
+The default development mode generates synthetic candles so the system can operate without an external market-data provider.
+
+### External Data
+
+A real market-data provider can be configured using:
+
+```env
+MARKET_DATA_API_KEY=
+MARKET_DATA_API_BASE=
+```
+
+If the external provider fails, the system can fall back to synthetic market data.
+
+---
+
+# 🧪 Example User Journey
+
+```text
+       REGISTER
+          │
+          ▼
+     DASHBOARD
+          │
+          ▼
+   SELECT STRATEGY
+          │
+          ▼
+   CONFIGURE RULES
+          │
+          ▼
+      BACKTEST
+          │
+          ▼
+   ANALYZE RESULTS
+          │
+          ▼
+      ACTIVATE
+          │
+          ▼
+   PAPER TRADING
+          │
+          ▼
+  MONITOR PERFORMANCE
+          │
+          ▼
+      AI ANALYSIS
+```
+
+---
+
+# 📈 Performance Metrics
+
+The platform can evaluate strategies using:
+
+| Metric               | Purpose                     |
+| -------------------- | --------------------------- |
+| **Total P&L**        | Overall profitability       |
+| **Win Rate**         | Successful trade percentage |
+| **Profit Factor**    | Gross profit vs. gross loss |
+| **Maximum Drawdown** | Largest portfolio decline   |
+| **Sharpe Ratio**     | Risk-adjusted performance   |
+| **Total Trades**     | Number of executed trades   |
+| **Average Trade**    | Average trade performance   |
+| **Equity Curve**     | Portfolio growth            |
+| **Open Positions**   | Current exposure            |
+
+---
+
+# 🗺️ Development Roadmap
+
+### Phase 1 — Foundation
+
+* [x] React frontend
+* [x] Express backend
+* [x] FastAPI AI service
+* [x] JWT authentication
+* [x] Database integration
+* [x] Synthetic market data
+* [x] WebSocket foundation
+
+### Phase 2 — Strategy Engine
+
+* [x] Strategy creation
+* [x] Strategy activation
+* [x] Rule-based signals
+* [x] Risk controls
+* [ ] Advanced strategy builder
+* [ ] Multi-strategy execution
+
+### Phase 3 — Backtesting
+
+* [x] Historical data workflow
+* [x] Trade simulation
+* [x] Performance metrics
+* [ ] Advanced analytics
+* [ ] Parameter optimization
+* [ ] Strategy comparison
+
+### Phase 4 — AI
+
+* [x] AI service
+* [x] Market analysis
+* [x] AI-assisted explanations
+* [ ] Context-aware recommendations
+* [ ] Advanced strategy analysis
+
+### Phase 5 — Production
+
+* [ ] Full Docker deployment
+* [ ] CI/CD
+* [ ] Monitoring
+* [ ] Logging improvements
+* [ ] Performance optimization
+* [ ] Security hardening
+
+---
+
+# 🧱 Engineering Principles
+
+### Modular
+
+Each major responsibility is separated into its own service.
+
+### Testable
+
+Strategies can be evaluated using historical data before activation.
+
+### Observable
+
+Trading activity, orders, positions, and system events are tracked.
+
+### Resilient
+
+External market-data failures do not immediately bring down the platform.
+
+### Explainable
+
+AI analysis is intended to help users understand signals and market conditions.
+
+### Scalable
+
+The architecture separates frontend, backend, AI, trading, and database responsibilities so individual services can evolve independently.
+
+---
+
+# ⚠️ Disclaimer
+
+This project is intended for **educational, research, and software-development purposes**.
+
+Paper trading and backtesting are simulations. Historical performance does not guarantee future results, and simulated execution may differ significantly from live market execution due to factors such as slippage, spreads, latency, liquidity, and market conditions.
+
+AI-generated analysis should not be considered financial advice.
+
+**This system does not execute real-money trades by default.**
+
+---
+
+<div align="center">
+
+# ⚡ MARKET → ALGORITHM → AI → DECISION → EXECUTION
+
+### Build strategies. Backtest ideas. Simulate markets.
+
+<br/>
+
+<img
+src="https://capsule-render.vercel.app/api?type=waving&color=0:020617,35:0F172A,65:1D4ED8,100:06B6D4&height=130&section=footer"
+width="100%"
+/>
+
+<br/>
+
+**Algorithmic Trading System**
+
+<sub>Built for algorithmic trading research, strategy development, and paper-trading simulation.</sub>
+
+</div>
