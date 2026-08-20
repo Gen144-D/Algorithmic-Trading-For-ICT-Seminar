@@ -99,10 +99,30 @@ router.post('/:id/activate', async (req, res, next) => {
       }
     }
     const strategy = await store.updateStrategy(req.params.id, { active });
+
+    // Keep a bot in sync so the engine can execute this strategy.
+    let bot = await store.botForStrategy(req.user.id, existing.id);
+    if (active) {
+      if (!bot) {
+        bot = await store.createBot({
+          user_id: req.user.id,
+          strategy_id: existing.id,
+          name: `${existing.name} Bot`,
+          mode: 'paper',
+          status: 'RUNNING',
+          config: {},
+        });
+      } else if (bot.status !== 'RUNNING') {
+        bot = await store.updateBot(bot.id, { status: 'RUNNING' });
+      }
+    } else if (bot) {
+      bot = await store.updateBot(bot.id, { status: 'STOPPED' });
+    }
+
     await store.addLog(req.user.id, active ? 'STRATEGY_ACTIVATED' : 'STRATEGY_DEACTIVATED', {
       name: strategy.name,
     });
-    res.json(strategy);
+    res.json({ ...strategy, bot });
   } catch (err) {
     next(err);
   }

@@ -1,23 +1,41 @@
 import { useEffect, useRef, useState } from 'react';
 
-// Connects to the backend WebSocket feed and delivers parsed messages.
+// Connects to the backend WebSocket feed (authenticated) and delivers parsed messages.
 export default function useWebSocket(onMessage) {
   const [connected, setConnected] = useState(false);
   const cbRef = useRef(onMessage);
   cbRef.current = onMessage;
 
   useEffect(() => {
-    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    const ws = new WebSocket(`${protocol}://${window.location.host}/ws`);
-    ws.onopen = () => setConnected(true);
-    ws.onclose = () => setConnected(false);
-    ws.onerror = () => setConnected(false);
-    ws.onmessage = (e) => {
-      try {
-        cbRef.current?.(JSON.parse(e.data));
-      } catch {}
+    let ws;
+    let retry = null;
+
+    const connect = () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setConnected(false);
+        return;
+      }
+      const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+      ws = new WebSocket(`${protocol}://${window.location.host}/ws?token=${encodeURIComponent(token)}`);
+      ws.onopen = () => setConnected(true);
+      ws.onclose = () => {
+        setConnected(false);
+        retry = setTimeout(connect, 3000);
+      };
+      ws.onerror = () => ws.close();
+      ws.onmessage = (e) => {
+        try {
+          cbRef.current?.(JSON.parse(e.data));
+        } catch {}
+      };
     };
-    return () => ws.close();
+
+    connect();
+    return () => {
+      clearTimeout(retry);
+      ws?.close();
+    };
   }, []);
 
   return connected;

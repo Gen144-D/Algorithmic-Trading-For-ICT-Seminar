@@ -6,7 +6,12 @@ const links = [
   { to: '/', label: 'Dashboard', end: true },
   { to: '/market', label: 'Market' },
   { to: '/strategies', label: 'Strategies' },
+  { to: '/bots', label: 'Bots' },
+  { to: '/marketplace', label: 'Marketplace' },
   { to: '/backtest', label: 'Backtest' },
+  { to: '/brokers', label: 'Brokers' },
+  { to: '/alerts', label: 'Alerts' },
+  { to: '/journal', label: 'Journal' },
   { to: '/ai', label: 'AI Assistant' },
   { to: '/analytics', label: 'Analytics' },
 ];

@@ -12,6 +12,11 @@ services:
       - db_data:/var/lib/mysql
       - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
   backend:
     build: ./backend
     environment:
@@ -22,11 +27,32 @@ services:
       DB_NAME: trading
       JWT_SECRET: change-me-in-production
       AI_SERVICE_URL: http://ai:8000
+      REDIS_URL: redis://redis:6379
+      ENGINE_EXTERNAL: "1"
+      BROKER_ENC_KEY: change-me-broker-encryption-key
     ports:
       - "5000:5000"
     depends_on:
       - db
       - ai
+      - redis
+
+  engine:
+    build: ./backend
+    command: ["node", "--import", "tsx", "src/engine/worker.ts"]
+    environment:
+      DB_HOST: db
+      DB_USER: trading
+      DB_PASSWORD: trading
+      DB_NAME: trading
+      JWT_SECRET: change-me-in-production
+      REDIS_URL: redis://redis:6379
+      ENGINE_INTERVAL_MS: "5000"
+      BROKER_ENC_KEY: change-me-broker-encryption-key
+    depends_on:
+      - db
+      - redis
+      - backend
 
   ai:
     build: ./ai-service

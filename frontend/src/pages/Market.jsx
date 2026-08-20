@@ -1,18 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import api, { fmtMoney } from '../api/client';
-import LineChart from '../components/LineChart';
-
-function smaSeries(closes, period) {
-  return closes.map((_, i) => {
-    if (i < period - 1) return null;
-    const window = closes.slice(i - period + 1, i + 1);
-    return window.reduce((a, b) => a + b, 0) / period;
-  });
-}
+import CandleChart from '../components/CandleChart';
 
 export default function Market() {
-  const [symbols, setSymbols] = useState(['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA', 'META', 'SPY', 'BTC', 'ETH']);
-  const [timeframes, setTimeframes] = useState(['1h', '4h', '1d']);
+  const [symbols, setSymbols] = useState([]);
+  const [timeframes, setTimeframes] = useState([]);
   const [symbol, setSymbol] = useState('AAPL');
   const [timeframe, setTimeframe] = useState('1h');
   const [candles, setCandles] = useState([]);
@@ -36,8 +28,21 @@ export default function Market() {
   }, [symbol, timeframe]);
 
   const closes = useMemo(() => candles.map((c) => c.close), [candles]);
-  const smaFast = useMemo(() => smaSeries(closes, 20), [closes]);
-  const smaSlow = useMemo(() => smaSeries(closes, 50), [closes]);
+  const sma = (period) =>
+    closes.map((_, i) => {
+      if (i < period - 1) return null;
+      const window = closes.slice(i - period + 1, i + 1);
+      return window.reduce((a, b) => a + b, 0) / period;
+    });
+  const smaFast = useMemo(() => sma(20), [closes]);
+  const smaSlow = useMemo(() => sma(50), [closes]);
+  const overlays = useMemo(
+    () => [
+      { name: 'SMA 20', data: smaFast, color: '#fbbf24' },
+      { name: 'SMA 50', data: smaSlow, color: '#a78bfa' },
+    ],
+    [smaFast, smaSlow]
+  );
   const last = candles[candles.length - 1];
   const change = last ? ((last.close - last.open) / last.open) * 100 : 0;
 
@@ -102,16 +107,8 @@ export default function Market() {
       ) : (
         <>
           <div className="card">
-            <LineChart
-              height={280}
-              series={[
-                { name: symbol, data: closes, color: '#38bdf8' },
-                { name: 'SMA 20', data: smaFast, color: '#fbbf24' },
-                { name: 'SMA 50', data: smaSlow, color: '#a78bfa' },
-              ]}
-            />
+            <CandleChart candles={candles} overlays={overlays} height={320} />
             <div className="flex gap-4 text-xs text-slate-400 mt-2">
-              <span><span className="text-accent">■</span> {symbol}</span>
               <span><span className="text-amber-400">■</span> SMA 20</span>
               <span><span className="text-violet-400">■</span> SMA 50</span>
             </div>

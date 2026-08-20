@@ -4,20 +4,35 @@
   "description": "Node.js/Express API for the Algorithmic Trading System",
   "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "start": "node --import tsx src/server.js",
+    "dev": "node --import tsx --watch src/server.js",
+    "engine": "node --import tsx src/engine/worker.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.11.0",
+    "redis": "^6.2.1",
+    "tsx": "^4.23.12",
     "uuid": "^9.0.1",
-    "ws": "^8.18.0"
+    "ws": "^8.18.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "nodemon": "^3.1.4"
+    "@types/node": "^26.2.0",
+    "nodemon": "^3.1.4",
+    "typescript": "^5.6.0",
+    "vitest": "^4.1.11"
+  },
+  "allowScripts": {
+    "esbuild@0.21.5": true,
+    "esbuild@0.28.2": true
   }
 }

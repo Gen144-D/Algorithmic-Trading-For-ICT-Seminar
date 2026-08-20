@@ -10,6 +10,11 @@ import StrategyBuilder from './pages/StrategyBuilder';
 import Backtest from './pages/Backtest';
 import AIAssistant from './pages/AIAssistant';
 import Analytics from './pages/Analytics';
+import Bots from './pages/Bots';
+import Marketplace from './pages/Marketplace';
+import Brokers from './pages/Brokers';
+import Journal from './pages/Journal';
+import Alerts from './pages/Alerts';
 
 export default function App() {
   return (
@@ -29,9 +34,14 @@ export default function App() {
         <Route path="strategies" element={<Strategies />} />
         <Route path="strategies/new" element={<StrategyBuilder />} />
         <Route path="strategies/:id/edit" element={<StrategyBuilder />} />
+        <Route path="bots" element={<Bots />} />
+        <Route path="marketplace" element={<Marketplace />} />
+        <Route path="brokers" element={<Brokers />} />
         <Route path="backtest" element={<Backtest />} />
         <Route path="ai" element={<AIAssistant />} />
         <Route path="analytics" element={<Analytics />} />
+        <Route path="journal" element={<Journal />} />
+        <Route path="alerts" element={<Alerts />} />
       </Route>
     </Routes>
   );

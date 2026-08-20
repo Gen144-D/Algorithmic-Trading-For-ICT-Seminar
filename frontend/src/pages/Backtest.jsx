@@ -8,10 +8,15 @@ export default function Backtest() {
   const [strategies, setStrategies] = useState([]);
   const [strategyId, setStrategyId] = useState('');
   const [capital, setCapital] = useState(10000);
+  const [feePct, setFeePct] = useState(0.05);
+  const [slippagePct, setSlippagePct] = useState(0.02);
+  const [allowShort, setAllowShort] = useState(false);
   const [result, setResult] = useState(null);
+  const [optimized, setOptimized] = useState(null);
+  const [walk, setWalk] = useState(null);
   const [ai, setAi] = useState(null);
   const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState('');
 
   useEffect(() => {
     api('/strategies').then((s) => {
@@ -24,10 +29,15 @@ export default function Backtest() {
     if (!strategyId) return;
     setError('');
     setResult(null);
+    setOptimized(null);
+    setWalk(null);
     setAi(null);
-    setBusy(true);
+    setBusy('backtest');
     try {
-      const res = await api('/backtest', { method: 'POST', body: { strategyId, initialCapital: capital } });
+      const res = await api('/backtest', {
+        method: 'POST',
+        body: { strategyId, initialCapital: capital, feePct, slippagePct, allowShort },
+      });
       setResult(res.result);
       const strategy = strategies.find((s) => s.id === strategyId);
       const analysis = await api('/ai/analyze/strategy', {
@@ -38,7 +48,62 @@ export default function Backtest() {
     } catch (e) {
       setError(e.message);
     } finally {
-      setBusy(false);
+      setBusy('');
+    }
+  };
+
+  const runOptimize = async () => {
+    if (!strategyId) return;
+    setError('');
+    setOptimized(null);
+    setWalk(null);
+    setBusy('optimize');
+    try {
+      const ind = (strategies.find((s) => s.id === strategyId)?.rules?.indicators) || {};
+      const paramSpace = {};
+      if (ind.sma_fast) paramSpace.sma_fast = [10, 20, 30];
+      if (ind.sma_slow) paramSpace.sma_slow = [50, 75, 100];
+      if (ind.ema_fast) paramSpace.ema_fast = [12, 20, 30];
+      if (ind.ema_slow) paramSpace.ema_slow = [40, 60, 80];
+      if (ind.rsi_period) paramSpace.rsi_period = [7, 14, 21];
+      if (ind.macd_slow) paramSpace.macd_slow = [21, 26, 34];
+      if (Object.keys(paramSpace).length === 0) {
+        throw new Error('No optimization-friendly parameters found in this strategy');
+      }
+      const res = await api('/backtest/optimize', {
+        method: 'POST',
+        body: { strategyId, paramSpace, initialCapital: capital, feePct, slippagePct },
+      });
+      setOptimized(res.results);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const runWalk = async () => {
+    if (!strategyId) return;
+    setError('');
+    setOptimized(null);
+    setWalk(null);
+    setBusy('walk');
+    try {
+      const ind = (strategies.find((s) => s.id === strategyId)?.rules?.indicators) || {};
+      const paramSpace = {};
+      if (ind.sma_fast) paramSpace.sma_fast = [10, 20, 30];
+      if (ind.sma_slow) paramSpace.sma_slow = [50, 75, 100];
+      if (ind.ema_fast) paramSpace.ema_fast = [12, 20, 30];
+      if (ind.ema_slow) paramSpace.ema_slow = [40, 60, 80];
+      const res = await api('/backtest/walk-forward', {
+        method: 'POST',
+        body: { strategyId, paramSpace, initialCapital: capital },
+      });
+      setWalk(res);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy('');
     }
   };
 
@@ -65,8 +130,28 @@ export default function Backtest() {
           <label className="label">Initial Capital</label>
           <input className="input" type="number" min={1000} value={capital} onChange={(e) => setCapital(Number(e.target.value))} />
         </div>
-        <button onClick={run} className="btn-primary" disabled={busy || !strategyId}>
-          {busy ? 'Running…' : 'Run backtest'}
+        <div className="w-28">
+          <label className="label">Fee %</label>
+          <input className="input" type="number" step="0.01" min={0} value={feePct} onChange={(e) => setFeePct(Number(e.target.value))} />
+        </div>
+        <div className="w-28">
+          <label className="label">Slippage %</label>
+          <input className="input" type="number" step="0.01" min={0} value={slippagePct} onChange={(e) => setSlippagePct(Number(e.target.value))} />
+        </div>
+        <div className="pb-2">
+          <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+            <input type="checkbox" checked={allowShort} onChange={(e) => setAllowShort(e.target.checked)} className="accent-emerald-500" />
+            Allow shorting
+          </label>
+        </div>
+        <button onClick={run} className="btn-primary" disabled={!!busy || !strategyId}>
+          {busy === 'backtest' ? 'Running…' : 'Run backtest'}
+        </button>
+        <button onClick={runOptimize} className="btn-ghost" disabled={!!busy || !strategyId}>
+          {busy === 'optimize' ? 'Optimizing…' : 'Optimize'}
+        </button>
+        <button onClick={runWalk} className="btn-ghost" disabled={!!busy || !strategyId}>
+          {busy === 'walk' ? 'Testing…' : 'Walk-forward'}
         </button>
       </div>
 
@@ -153,6 +238,63 @@ export default function Backtest() {
             )}
           </div>
         </>
+      )}
+
+      {optimized && (
+        <div className="card">
+          <h2 className="font-semibold mb-4">Optimization Results (top {optimized.length})</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-base-700">
+                  <th className="table-th">Parameters</th>
+                  <th className="table-th">Return</th>
+                  <th className="table-th">Trades</th>
+                  <th className="table-th">Win rate</th>
+                  <th className="table-th">Profit factor</th>
+                  <th className="table-th">Max DD</th>
+                </tr>
+              </thead>
+              <tbody>
+                {optimized.map((r, i) => (
+                  <tr key={i} className={`border-b border-base-800 ${i === 0 ? 'bg-emerald-950/30' : ''}`}>
+                    <td className="table-td font-mono text-xs text-slate-300">{Object.entries(r.params).map(([k, v]) => `${k}=${v}`).join(' ')}</td>
+                    <td className={`table-td font-semibold ${r.result.totalReturnPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {r.result.totalReturnPct > 0 ? '+' : ''}{r.result.totalReturnPct}%
+                    </td>
+                    <td className="table-td">{r.result.numTrades}</td>
+                    <td className="table-td">{r.result.winRate}%</td>
+                    <td className="table-td">{r.result.profitFactor === Infinity ? '∞' : Number(r.result.profitFactor).toFixed(2)}</td>
+                    <td className="table-td">{r.result.maxDrawdown}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {walk && (
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="card">
+            <h2 className="font-semibold mb-3">In-sample (70%)</h2>
+            {walk.inSample.slice(0, 3).map((r, i) => (
+              <div key={i} className="flex items-center justify-between py-1 text-sm">
+                <span className="font-mono text-xs text-slate-400">{Object.entries(r.params).map(([k, v]) => `${k}=${v}`).join(' ')}</span>
+                <span className="font-semibold">{r.result.totalReturnPct}%</span>
+              </div>
+            ))}
+          </div>
+          <div className="card">
+            <h2 className="font-semibold mb-3">Out-of-sample (30%)</h2>
+            {walk.outOfSample.slice(0, 3).map((r, i) => (
+              <div key={i} className="flex items-center justify-between py-1 text-sm">
+                <span className="font-mono text-xs text-slate-400">{Object.entries(r.params).map(([k, v]) => `${k}=${v}`).join(' ')}</span>
+                <span className="font-semibold">{r.result.totalReturnPct}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

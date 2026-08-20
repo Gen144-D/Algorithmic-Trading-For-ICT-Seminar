@@ -15,26 +15,43 @@ export function AuthProvider({ children }) {
     }
     api('/auth/me')
       .then(setUser)
-      .catch(() => localStorage.removeItem('token'))
+      .catch(() => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+      })
       .finally(() => setLoading(false));
   }, []);
 
   const login = async (email, password) => {
     const data = await api('/auth/login', { method: 'POST', body: { email, password }, auth: false });
-    localStorage.setItem('token', data.token);
-    setUser(data.user);
+    if (data.need2fa) return { need2fa: true, pendingToken: data.pendingToken };
+    storeSession(data);
+    return { need2fa: false, user: data.user };
+  };
+
+  const verify2FA = async (pendingToken, code) => {
+    const data = await api('/auth/2fa/verify', {
+      method: 'POST',
+      body: { pendingToken, code },
+      auth: false,
+    });
+    storeSession(data);
     return data.user;
   };
 
   const register = async (name, email, password) => {
     const data = await api('/auth/register', { method: 'POST', body: { name, email, password }, auth: false });
-    localStorage.setItem('token', data.token);
-    setUser(data.user);
+    storeSession(data);
     return data.user;
   };
 
   const logout = () => {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (refreshToken) {
+      api('/auth/logout', { method: 'POST', body: { refreshToken }, auth: false }).catch(() => {});
+    }
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     setUser(null);
     window.location.href = '/login';
   };
@@ -45,10 +62,15 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refresh }}>
+    <AuthContext.Provider value={{ user, loading, login, verify2FA, register, logout, refresh }}>
       {children}
     </AuthContext.Provider>
   );
+}
+
+function storeSession(data) {
+  localStorage.setItem('token', data.token);
+  if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
 }
 
 export function useAuth() {

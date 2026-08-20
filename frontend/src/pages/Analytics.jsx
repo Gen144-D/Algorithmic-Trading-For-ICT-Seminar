@@ -52,8 +52,8 @@ export default function Analytics() {
                     <td className="table-td font-semibold text-slate-100">{t.symbol}</td>
                     <td className="table-td"><span className={`badge ${t.side === 'BUY' ? 'bg-emerald-900/50 text-emerald-400' : 'bg-rose-900/50 text-rose-400'}`}>{t.side}</span></td>
                     <td className="table-td">{Number(t.quantity).toFixed(4)}</td>
-                    <td className="table-td">{fmtMoney(t.price)}</td>
-                    <td className="table-td">{t.closed_at ? fmtMoney(t.price) : '—'}</td>
+                    <td className="table-td">{fmtMoney(t.entry_price != null ? t.entry_price : t.price)}</td>
+                    <td className="table-td">{t.exit_price != null ? fmtMoney(t.exit_price) : '—'}</td>
                     <td className="table-td text-xs text-slate-500">{new Date(t.opened_at).toLocaleString()}</td>
                     <td className={`table-td font-semibold ${t.pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{fmtMoney(t.pnl)}</td>
                   </tr>

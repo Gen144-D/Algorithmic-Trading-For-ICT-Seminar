@@ -235,14 +235,16 @@ The system simulates execution so strategies can be tested without placing real 
 | Component         | Technology               | Responsibility        |
 | ----------------- | ------------------------ | --------------------- |
 | 🖥️ Frontend      | React + Vite + Tailwind  | Trading interface     |
-| ⚙️ Backend        | Node.js + Express        | API & orchestration   |
+| ⚙️ Backend        | Node.js + Express + TS   | API & orchestration   |
 | 🤖 AI Service     | FastAPI + Python         | AI analysis           |
-| 🧠 Trading Engine | Python / Node            | Strategy execution    |
-| 🗄️ Database      | MySQL                    | Persistent data       |
-| 📡 Market Data    | External API / Synthetic | Price feeds           |
-| 🔐 Authentication | JWT                      | User authentication   |
-| ⚡ Real-Time       | WebSocket                | Live updates          |
-| 🐳 Deployment     | Docker                   | Service orchestration |
+| 🧠 Trading Engine | TypeScript worker        | Strategy execution    |
+| 🗄️ Database      | MySQL (fallback in-memory) | Persistent data     |
+| ⚡ Message Bus    | Redis (fallback in-memory) | Engine ↔ server events |
+| 📡 Market Data    | Binance / TwelveData / Synthetic | Price feeds     |
+| 🏦 Broker Adapter | Paper + Alpaca (extensible) | Order execution   |
+| 🔐 Authentication | JWT + refresh tokens + 2FA | User authentication |
+| ⚡ Real-Time       | WebSocket (authenticated) | Live updates          |
+| 🐳 Deployment     | Docker Compose (with engine worker) | Service orchestration |
 
 ---
 
@@ -465,11 +467,21 @@ algorithmic-trading-system/
 │   └── schema.sql
 │
 ├── backend/
-│   ├── routes/
-│   ├── controllers/
-│   ├── services/
-│   ├── middleware/
-│   └── server.js
+│   ├── src/
+│   │   ├── routes/            # REST endpoints (auth, strategies, bots, backtest,
+│   │   │                      #   market, marketplace, brokers, alerts, journal, trade)
+│   │   ├── services/          # JS bridges to the TS market data layer
+│   │   ├── modules/           # TypeScript core: indicators, risk, engine, bus,
+│   │   │                      #   market providers, broker adapters, totp
+│   │   ├── data/              # mysql.js + memory.js stores
+│   │   ├── config/            # DB/store wiring
+│   │   ├── middleware/        # auth (JWT, pending-2FA)
+│   │   ├── seed/              # marketplace seeding
+│   │   ├── engine/            # standalone engine worker entrypoint
+│   │   ├── test/              # vitest suites (indicators, risk, engine)
+│   │   └── server.js
+│   ├── tsconfig.json
+│   └── package.json
 │
 ├── ai-service/
 │   ├── main.py
@@ -479,13 +491,16 @@ algorithmic-trading-system/
 │
 ├── frontend/
 │   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── api/
-│   │   ├── context/
-│   │   └── hooks/
+│   │   ├── components/        # Layout, CandleChart, StatCard, ProtectedRoute
+│   │   ├── pages/             # Dashboard, Market, Strategies, StrategyBuilder,
+│   │   │                      #   Backtest, Bots, Marketplace, Brokers, Alerts,
+│   │   │                      #   Journal, Analytics, AIAssistant, Login, Register
+│   │   ├── api/               # client.js (refresh tokens, WS token)
+│   │   ├── context/           # AuthContext (2FA + refresh)
+│   │   └── hooks/             # useWebSocket
 │   └── package.json
 │
+├── .github/workflows/ci.yml
 ├── docker-compose.yml
 ├── .env.example
 └── README.md
@@ -505,7 +520,16 @@ npm run dev
 
 **Port:** `5000`
 
-The backend automatically uses an in-memory database when MySQL is unavailable.
+Useful scripts:
+
+```bash
+npm run typecheck   # TypeScript type checking (tsc --noEmit)
+npm test            # vitest suite (indicators, risk engine, backtest engine)
+npm run engine      # run the trading engine as an external worker (uses Redis bus)
+```
+
+The backend automatically uses an in-memory database when MySQL is unavailable,
+and an in-memory message bus when Redis is unavailable.
 
 For MySQL, configure the `DB_*` variables in:
 
@@ -577,7 +601,7 @@ http://localhost:5173
 
 # 🐳 Docker
 
-Run the complete system using Docker Compose:
+Run the complete system (MySQL + Redis + backend + engine worker + AI + frontend) using Docker Compose:
 
 ```bash
 docker compose up --build
@@ -612,9 +636,15 @@ Typical configuration includes:
 ```env
 DATABASE_URL=
 JWT_SECRET=
+BROKER_ENC_KEY=
+
+REDIS_URL=
+ENGINE_EXTERNAL=1
+ENGINE_INTERVAL_MS=15000
 
 MARKET_DATA_API_KEY=
 MARKET_DATA_API_BASE=
+BINANCE_API_BASE=
 
 AI_SERVICE_URL=
 ```
@@ -625,22 +655,38 @@ AI_SERVICE_URL=
 
 # 📊 Market Data
 
-The system supports two data modes.
+The system supports three data modes, with automatic fallback.
 
 ### Synthetic Data
 
 The default development mode generates synthetic candles so the system can operate without an external market-data provider.
 
-### External Data
+### Real Data
 
-A real market-data provider can be configured using:
+Providers are queried in priority order:
+
+* **Binance** (`https://api.binance.com`) — live candles and 24h tickers for crypto symbols (`BTC`, `ETH`, `SOL`, `XRP`, …)
+* **TwelveData** — stocks, ETFs and forex when `MARKET_DATA_API_KEY` is set
+* **Synthetic fallback** — used when no provider is available for a symbol
 
 ```env
 MARKET_DATA_API_KEY=
-MARKET_DATA_API_BASE=
+MARKET_DATA_API_BASE=https://api.twelvedata.com
+BINANCE_API_BASE=https://api.binance.com
 ```
 
-If the external provider fails, the system can fall back to synthetic market data.
+If an external provider fails, the system falls back to synthetic market data so the platform keeps running.
+
+---
+
+# 🏦 Broker Connectivity
+
+Bots run in two modes:
+
+* **Paper** (default) — simulated execution against the built-in paper account
+* **Live** — routed through a connected broker adapter (Alpaca), gated by a connectivity test and a kill-switch (`live_enabled`)
+
+Credentials are encrypted at rest (AES-256-GCM) using `BROKER_ENC_KEY`. A live bot cannot start unless its strategy passes `riskEngine.validateForLive()` (requires explicit stop-loss and position-sizing rules).
 
 ---
 
@@ -715,16 +761,17 @@ The platform can evaluate strategies using:
 * [x] Strategy activation
 * [x] Rule-based signals
 * [x] Risk controls
-* [ ] Advanced strategy builder
-* [ ] Multi-strategy execution
+* [x] Advanced strategy builder
+* [x] Multi-strategy execution (bot ecosystem)
 
 ### Phase 3 — Backtesting
 
 * [x] Historical data workflow
 * [x] Trade simulation
-* [x] Performance metrics
-* [ ] Advanced analytics
-* [ ] Parameter optimization
+* [x] Performance metrics (Sortino, annualized, expectancy)
+* [x] Fees, slippage and shorting simulation
+* [x] Parameter optimization (grid search)
+* [x] Walk-forward analysis
 * [ ] Strategy comparison
 
 ### Phase 4 — AI
@@ -735,14 +782,18 @@ The platform can evaluate strategies using:
 * [ ] Context-aware recommendations
 * [ ] Advanced strategy analysis
 
-### Phase 5 — Production
+### Phase 5 — Platform Features
 
-* [ ] Full Docker deployment
-* [ ] CI/CD
-* [ ] Monitoring
-* [ ] Logging improvements
+* [x] Trading bots (paper + live gating)
+* [x] Bot marketplace with one-click install
+* [x] Broker connections (Alpaca) with encrypted credentials
+* [x] Price alerts
+* [x] Trade journal
+* [x] Two-factor authentication + refresh tokens
+* [x] Redis message bus + external engine worker
+* [x] CI/CD workflow
+* [ ] Monitoring & observability
 * [ ] Performance optimization
-* [ ] Security hardening
 
 ---
 

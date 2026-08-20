@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:24-alpine
 
 WORKDIR /app
 
@@ -10,4 +10,4 @@ COPY src ./src
 ENV NODE_ENV=production
 EXPOSE 5000
 
-CMD ["node", "src/server.js"]
+CMD ["node", "--import", "tsx", "src/server.js"]

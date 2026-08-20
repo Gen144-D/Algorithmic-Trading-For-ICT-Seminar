@@ -22,24 +22,31 @@ router.get('/portfolio', async (req, res, next) => {
     const store = await getStore();
     const user = await store.findUserById(req.user.id);
     const open = await store.openTrades(req.user.id);
-    const closed = (await store.listTrades(req.user.id)).filter((t) => t.status === 'CLOSED');
+    const all = await store.listTrades(req.user.id);
+    const closed = all.filter((t) => t.status === 'CLOSED');
 
     const positions = [];
     let unrealizedPnl = 0;
     for (const pos of open) {
       const quote = await getQuote(pos.symbol);
-      const price = quote ? quote.price : pos.price;
-      const pnl = (price - pos.price) * pos.quantity;
+      const price = quote ? quote.price : pos.entry_price || pos.price;
+      const pnl = (price - (pos.entry_price || pos.price)) * pos.quantity;
       unrealizedPnl += pnl;
       positions.push({ ...pos, currentPrice: price, unrealizedPnl: pnl });
     }
 
     const realizedPnl = closed.reduce((a, t) => a + Number(t.pnl || 0), 0);
+    const equity = Number(user.balance) + unrealizedPnl;
+    const peak = Number(user.peak_equity) || equity;
+    const drawdownPct = peak > 0 ? Math.max(0, ((peak - equity) / peak) * 100) : 0;
+
     res.json({
       balance: user.balance,
-      equity: user.balance + unrealizedPnl,
+      equity,
       unrealizedPnl,
       realizedPnl,
+      drawdownPct: Math.round(drawdownPct * 100) / 100,
+      peakEquity: peak,
       positions,
       closedTrades: closed.slice(-50).reverse(),
     });
